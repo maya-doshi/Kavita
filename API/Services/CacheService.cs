@@ -210,7 +210,14 @@ public class CacheService : ICacheService
             }
 
             var files = chapter?.Files.ToList();
-            ExtractChapterFiles(extractPath, files, extractPdfToImages);
+            try {
+                ExtractChapterFiles(extractPath, files, extractPdfToImages);
+            }
+            catch (Exception ex) {
+                _logger.LogWarning(ex, "Extraction for {Path} failed. Cleaning up directory and retrying once.", extractPath);
+                _directoryService.ClearDirectory(_directoryService.CacheDirectory);
+                ExtractChapterFiles(extractPath, files, extractPdfToImages);
+            }
         } finally {
             extractLock.Release();
         }
